@@ -9,11 +9,6 @@ import seaborn as sns
 from datetime import datetime
 import os
 import plotly.express as px
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from dotenv import load_dotenv
-load_dotenv()
 import io
 
 
@@ -23,21 +18,22 @@ import io
 # EMAIL_ADDRESS = st.secrets["EMAIL_ADDRESS"]
 # EMAIL_PASSWORD = st.secrets["EMAIL_PASSWORD"]
 
-def send_email_alert(subject, body, to_email):
-    msg = MIMEMultipart()
-    msg["From"] = EMAIL_ADDRESS
-    msg["To"] = to_email
-    msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain"))
+# def send_email_alert(subject, body, to_email):
+#     msg = MIMEMultipart()
+#     msg["From"] = EMAIL_ADDRESS
+#     msg["To"] = to_email
+#     msg["Subject"] = subject
+#     msg.attach(MIMEText(body, "plain"))
 
-    try:
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.starttls()
-            server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-            server.sendmail(EMAIL_ADDRESS, to_email, msg.as_string())
-        print("📧 Email sent successfully!")
-    except Exception as e:
-        print(f"❌ Failed to send email: {e}")
+#     try:
+#         with smtplib.SMTP("smtp.gmail.com", 587) as server:
+#             server.starttls()
+#             server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+#             server.sendmail(EMAIL_ADDRESS, to_email, msg.as_string())
+#         print("📧 Email sent successfully!")
+#     except Exception as e:
+#         print(f"❌ Failed to send email: {e}")
+
 
 
 
@@ -157,7 +153,7 @@ st.markdown("""
 
 # ✅ Load Model and Data
 model = joblib.load("walmart/dataset/rf_final_model.pkl")
-final_df = pd.read_csv("final_df.csv")
+final_df = pd.read_csv("walmart/dataset/final_df.csv")
 final_df['Date'] = pd.to_datetime(final_df['Date'])
 final_df['Year'] = final_df['Date'].dt.year
 
@@ -234,9 +230,9 @@ selected = final_df[(final_df['Store'] == store) & (final_df['Dept'] == dept) & 
 if selected.empty:
     st.warning("No data found for this combination.")
 else:
-    features = selected.drop(columns=['Weekly_Sales', 'Date'])
+    features = selected.drop(columns=['Weekly_Sales', 'Date'], errors='ignore')
 
-    feature_names = joblib.load("model/feature_names.pkl")
+    feature_names = joblib.load("walmart/dataset/model/feature_names.pkl")
     features = features.reindex(columns=feature_names, fill_value=0)
 
     prediction = model.predict(features)[0]
@@ -252,24 +248,29 @@ else:
     #     st.warning(translations[language]["low_alert"])
     # else:
     #     st.success("✅ Sales within normal range.")
-    user_email = st.sidebar.text_input("📩 Enter your email for alerts (optional)")
+
+
+
+
+
+    # user_email = st.sidebar.text_input("📩 Enter your email for alerts (optional)")
 
     if prediction > 50000:
         st.error(translations[language]["high_alert"])
-        if user_email:
-            send_email_alert(
-                subject="🚨 High Sales Alert",
-                body=f"The predicted weekly sales for Store {store}, Department {dept} on {date} is ${prediction:,.2f}. Restock inventory accordingly.",
-                to_email=user_email
-            )
+        # if user_email:
+        #     send_email_alert(
+        #         subject="🚨 High Sales Alert",
+        #         body=f"The predicted weekly sales for Store {store}, Department {dept} on {date} is ${prediction:,.2f}. Restock inventory accordingly.",
+        #         to_email=user_email
+        #     )
     elif prediction < 1000:
         st.warning(translations[language]["low_alert"])
-        if user_email:
-            send_email_alert(
-                subject="📉 Low Sales Alert",
-                body=f"The predicted weekly sales for Store {store}, Department {dept} on {date} is ${prediction:,.2f}. Investigate promotions or demand issues.",
-                to_email=user_email
-            )
+        # if user_email:
+        #     send_email_alert(
+        #         subject="📉 Low Sales Alert",
+        #         body=f"The predicted weekly sales for Store {store}, Department {dept} on {date} is ${prediction:,.2f}. Investigate promotions or demand issues.",
+        #         to_email=user_email
+        #     )
     else:
         st.success("✅ Sales within normal range.")
 
@@ -306,8 +307,8 @@ with st.expander("📊 Department Sales Comparison"):
 # 4️⃣ Actual vs Predicted
 with st.expander("🎯 Actual vs Predicted Sales"):
     try:
-        y_test = pd.read_csv("y_test.csv")
-        y_pred = pd.read_csv("y_pred.csv")
+        y_test = pd.read_csv("walmart/dataset/y_test.csv")
+        y_pred = pd.read_csv("walmart/dataset/y_pred.csv")
 
         n = st.slider("Select number of predictions to view", 10, 100, 50)
         chart_df = pd.DataFrame({
@@ -403,22 +404,22 @@ with st.expander("🧠 Feature Importance (Interactive)"):
         st.warning("Unable to display feature importance.")
         st.text(str(e))
 
-##email-alert
-def send_email_alert(subject, body, to_email):
-    sender_email = "your_email@example.com"
-    sender_password = "your_app_password"  # Use app-specific password (e.g., from Gmail)
+# ##email-alert
+# def send_email_alert(subject, body, to_email):
+#     sender_email = "your_email@example.com"
+#     sender_password = "your_app_password"  # Use app-specific password (e.g., from Gmail)
 
-    msg = MIMEMultipart()
-    msg["From"] = sender_email
-    msg["To"] = to_email
-    msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain"))
+    # msg = MIMEMultipart()
+    # msg["From"] = sender_email
+    # msg["To"] = to_email
+    # msg["Subject"] = subject
+    # msg.attach(MIMEText(body, "plain"))
 
-    try:
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.starttls()
-            server.login(sender_email, sender_password)
-            server.sendmail(sender_email, to_email, msg.as_string())
-        print("📧 Email sent successfully!")
-    except Exception as e:
-        print(f"❌ Failed to send email: {e}")
+    # try:
+    #     with smtplib.SMTP("smtp.gmail.com", 587) as server:
+    #         server.starttls()
+    #         server.login(sender_email, sender_password)
+    #         server.sendmail(sender_email, to_email, msg.as_string())
+    #     print("📧 Email sent successfully!")
+    # except Exception as e:
+    #     print(f"❌ Failed to send email: {e}")
