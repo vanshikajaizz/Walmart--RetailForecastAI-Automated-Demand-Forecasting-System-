@@ -156,7 +156,7 @@ st.markdown("""
 
 
 # ✅ Load Model and Data
-model = joblib.load("rf_final_model.pkl")
+model = joblib.load("walmart/dataset/rf_final_model.pkl")
 final_df = pd.read_csv("final_df.csv")
 final_df['Date'] = pd.to_datetime(final_df['Date'])
 final_df['Year'] = final_df['Date'].dt.year
